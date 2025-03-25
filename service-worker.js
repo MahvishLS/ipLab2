@@ -15,6 +15,7 @@ const urlsToCache = [
   '/script.js'
 ];
 
+// Install event: Cache assets
 self.addEventListener('install', (event) => {
   console.log('Installing Service Worker...');
   event.waitUntil(
@@ -26,14 +27,15 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
+// Activate event: Cleanup old caches
 self.addEventListener('activate', (event) => {
-  console.log(' Activating Service Worker...');
+  console.log('Activating Service Worker...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log(' Deleting old cache:', cacheName);
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -43,31 +45,32 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-/** Intercept Fetch Requests */
 self.addEventListener('fetch', (event) => {
+  console.log('Service Worker: Fetching', event.request.url);
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        console.log(' Serving from cache:', event.request.url);
+        console.log('Serving from cache:', event.request.url);
+        console.log('Fetch successful!');
         return cachedResponse;
       }
       return fetch(event.request).then((networkResponse) => {
+        console.log('Fetch successful!', event.request.url);
         return caches.open(CACHE_NAME).then((cache) => {
-          console.log(' Caching new response:', event.request.url);
+          console.log('Caching new response:', event.request.url);
           cache.put(event.request, networkResponse.clone());
           return networkResponse;
         });
       });
     }).catch((error) => {
-      console.error(' Fetch error:', error);
+      console.error('Fetch failed:', error);
     })
   );
 });
 
-/**  Handle Push Notifications */
+// Handle Push Notifications
 self.addEventListener('push', (event) => {
-
-
   if (!event.data) {
     console.error('Push event has NO data!');
     return;
@@ -78,7 +81,7 @@ self.addEventListener('push', (event) => {
   try {
     data = JSON.parse(rawText);
   } catch (e) {
-    console.error("🔥 Failed to parse push payload:", e);
+    console.error("Failed to parse push payload:", e);
     return;
   }
 
@@ -94,28 +97,25 @@ self.addEventListener('push', (event) => {
   };
 
   if (Notification.permission === 'granted') {
- 
     event.waitUntil(
       self.registration.showNotification("Mahvish's Bakery", options)
-        .then(() => console.log(" Notification displayed!"))
-        .catch(err => console.error(" Notification error:", err))
+        .then(() => console.log("Notification displayed!"))
+        .catch(err => console.error("Notification error:", err))
     );
   } else {
-    console.log(' Notification permission not granted.');
+    console.log('Notification permission not granted.');
   }
 });
 
-/** Handle Notification Click */
+// Handle Notification Click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(
-    clients.openWindow('/') 
-  );
+  event.waitUntil(clients.openWindow('/'));
 });
 
-self.addEventListener('sync', event=>{
-  if(event.tag=='syncMessage'){
-    console.log("Sync successful!");
-  };
+// Background Sync
+self.addEventListener('sync', function (event) {
+  if (event.tag === 'syncMessage') {
+    console.log('Sync successful!');
+  }
 });
-
