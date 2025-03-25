@@ -3,6 +3,15 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css', 
+  '/icons/icon-192-1.png',
+  '/icons/icon-512.png',
+  '/assets/brownie.png',
+  '/assets/cakes.png',
+  '/assets/cookies.png',
+  '/assets/donuts.png',
+  '/assets/logo.png',
+  '/assets/muffins.png',
+  '/assets/pastry.png',
 ];
 
 // Install service worker
